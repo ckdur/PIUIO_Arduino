@@ -11,7 +11,7 @@ echo Abracadabra!
 cd ATmega8u2Code/HexFiles
 echo Attempting to re-flash for an Arduino Uno R1/R2
 @echo on
-batchisp -device at90usb82 -hardware usb -operation erase f memory flash blankcheck loadbuffer "Joystick.hex" program verify start reset 1024
+batchisp -device at90usb82 -hardware usb -operation erase f memory flash blankcheck loadbuffer "PIUIO.hex" program verify start reset 1024
 @echo off
 if %errorlevel% NEQ 0 (
     goto R3FLASH
@@ -23,7 +23,7 @@ else (
 :R3FLASH
 echo Trying to re-flash for an Arduino Uno R3...
 @echo on
-batchisp -device atmega16u2 -hardware usb -operation erase f memory flash blankcheck loadbuffer "Joystick.hex" program verify start reset 1024
+batchisp -device atmega16u2 -hardware usb -operation erase f memory flash blankcheck loadbuffer "PIUIO.hex" program verify start reset 1024
 @echo off
 if %errorlevel% NEQ 0 (
     echo %errorlevel%
