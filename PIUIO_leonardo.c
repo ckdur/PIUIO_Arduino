@@ -7,25 +7,23 @@
 /*                                                         */
 /*  By: USB-ON-ATMEGAU4 BY CKDUR                           */
 /***********************************************************/
-/*  Basicly this is an PIUIO Clone with an ATMEGA32U2      */
-/*               interfaced on ARDUINO Leonardo            */
+/*    Basicly this is an PIUIO Clone with an ATMEGA32U2    */
+/*            interfaced on ARDUINO Leonardo               */
 /***********************************************************/
-/*      This is main code from PIUIO Clone                 */
+/*          This is main code from PIUIO Clone             */
 /***********************************************************/
-/*                    License is MIT                       */
+/*          Please look at LICENSE for details             */
 /*  Please consult https://github.com/ckdur/PIUIO_arduino  */
 /***********************************************************/
 
 #include "PIUIO.h"
+#include "PIUIO_ctrl.h"
 
 #define PIUIO_CTL_REQ 0xAE
 
 #define GETBIT(port,bit) ((unsigned char)(((unsigned char)(port)) & ((unsigned char)(0x01 << ((unsigned char)(bit))))))
 #define SETBIT(port,bit) port |= (0x01 << (bit))
 #define CLRBIT(port,bit) port &= ~(0x01 << (bit))
-
-static unsigned char LampData[8];       // The LampData buffer received
-static unsigned char InputData[8];      // The InputData buffer to send
 
 // This turns on one of the LEDs hooked up to the chip
 // NOTE: use the enum for the port
@@ -221,107 +219,6 @@ int READfrom(char ledNumber, int port){
 #define LED_UR DIOA3
 #define LED_DL DIOA4
 
-/** Configures the board hardware and chip peripherals for the demo's functionality. */
-void SetupHardware(void)
-{
-#if (ARCH == ARCH_AVR8)
-    /* Disable watchdog if enabled by bootloader/fuses */
-    wdt_reset(); 
-    MCUSR &= ~(1 << WDRF);
-    wdt_disable();
-
-    /* Disable clock division */
-    clock_prescale_set(clock_div_1);
-
-    // Start up the USART for serial communications
-    // 25 corresponds to 38400 baud - see datasheet for more values
-    //USART_Init(25);// 103 corresponds to 9600, 8 corresponds to 115200 baud, 3 for 250000
-    //Serial_Init(38400, false);
-
-#elif (ARCH == ARCH_XMEGA)
-    /* Start the PLL to multiply the 2MHz RC oscillator to 32MHz and switch the CPU core to run from it */
-    XMEGACLK_StartPLL(CLOCK_SRC_INT_RC2MHZ, 2000000, F_CPU);
-    XMEGACLK_SetCPUClockSource(CLOCK_SRC_PLL);
-
-    /* Start the 32MHz internal RC oscillator and start the DFLL to increase it to 48MHz using the USB SOF as a reference */
-    XMEGACLK_StartInternalOscillator(CLOCK_SRC_INT_RC32MHZ);
-    XMEGACLK_StartDFLL(CLOCK_SRC_INT_RC32MHZ, DFLL_REF_INT_USBSOF, F_USB);
-
-    PMIC.CTRL = PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-#endif
-
-    /* Hardware Initialization */
-    USB_Init();
-}
-
-/** Event handler for the library USB Connection event. */
-void EVENT_USB_Device_Connect(void)
-{
-    // CKDUR: EMPTY
-}
-
-/** Event handler for the library USB Disconnection event. */
-void EVENT_USB_Device_Disconnect(void)
-{
-    // CKDUR: EMPTY
-}
-
-/** Event handler for the library USB Configuration Changed event. */
-void EVENT_USB_Device_ConfigurationChanged(void)
-{
-    bool ConfigSuccess = true;
-    // CKDUR: RACERXL didn't enable SOFs
-    USB_Device_EnableSOFEvents();
-}
-
-int nControl = 0;
-
-/** Event handler for the library USB Control Request reception event. */
-void EVENT_USB_Device_ControlRequest(void)
-{
-    if (!(Endpoint_IsSETUPReceived()))
-      return;
-    // CKDUR: Here comes the magic
-    if(USB_ControlRequest.bRequest == 0xAE)    {                               //    Access Game IO
-        nControl++;
-        if(!(USB_ControlRequest.bmRequestType & 0x80))    {
-
-            Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
-            while (!(Endpoint_IsINReady()));
-
-            // CKDUR: Read the lamp values
-            Endpoint_ClearSETUP();
-            Endpoint_Read_Control_Stream_LE(LampData, 8);
-            Endpoint_ClearIN();
-
-            /* mark the whole request as successful: */
-            //Endpoint_ClearStatusStage();
-            //LEDoff(RXLED);
-        }                                   //    Reading input data
-        else
-        {
-            //LEDon(TXLED);
-
-            Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
-
-            // CKDUR: Set the switch state
-            Endpoint_ClearSETUP();
-            Endpoint_Write_Control_Stream_LE(InputData, 8);
-            Endpoint_ClearOUT();
-
-            /* mark the whole request as successful: */
-            //Endpoint_ClearStatusStage();
-            //LEDoff(TXLED);
-        }
-    }
-}
-
-/** Event handler for the USB device Start Of Frame event. */
-// CKDUR: RACERXL didn't enable SOFs
-void EVENT_USB_Device_StartOfFrame(void)
-{
-}
-
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
@@ -439,7 +336,6 @@ RESTART:
         if(nControl > 1000) LEDon(RXLED);
         if(nControl > 2000) {LEDoff(RXLED); nControl = 0;}
         
-        // Modify Input[x] and use Output[x] to IO the LEDs
 #ifdef KEY_Q
         if(READfrom(KEY_Q)) {SETBIT(InputData[0],0);} else {CLRBIT(InputData[0],0);}
 #endif
@@ -541,5 +437,3 @@ RESTART:
 
     return 0;
 }
-
-

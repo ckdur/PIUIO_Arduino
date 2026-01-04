@@ -12,7 +12,7 @@
 /***********************************************************/
 /*      This is main code from PIUIO Clone (HEADER)        */
 /***********************************************************/
-/*                    License is WHAT?                     */
+/*          Please look at LICENSE for details             */
 /*  Please consult https://github.com/racerxdl/piuio_clone */
 /***********************************************************/
 

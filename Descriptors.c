@@ -12,7 +12,7 @@
 /***********************************************************/
 /*      This is the USB Configuration part                 */
 /***********************************************************/
-/*                    License is WHAT?                     */
+/*          Please look at LICENSE for details             */
 /*  Please consult https://github.com/racerxdl/piuio_clone */
 /***********************************************************/
 
@@ -25,146 +25,318 @@
 
 #include "Descriptors.h"
 
-/** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
- *  device characteristics, including the supported USB version, control endpoint size and the
- *  number of device configurations. The descriptor is read out by the USB host when the enumeration
- *  process begins.
+
+int piuio_which_device = 1; // Default is PIUIO
+/** Device descriptor for the regular PIUIO
  */
-const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
+const USB_Descriptor_Device_t PROGMEM DeviceDescriptorPIUIO =
 {
-	// CKDUR: All "Device Description" is here
-	.Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
+    // All "Device Description" is here
+    .Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
-	.USBSpecification       = VERSION_BCD(1,0,0),
-	.Class                  = 0xFF,						// RACERXL: 0xFF is a vendor-specifc class. Thats what we want
-	.SubClass               = 0x00,
-	.Protocol               = 0x00,
+    .USBSpecification       = VERSION_BCD(1,0,0),
+    .Class                  = 0xFF,
+    .SubClass               = 0x00,
+    .Protocol               = 0x00,
 
-	.Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,		// CKDUR: Was FIXED_CONTROL_ENDPOINT_SIZE = 8
+    .Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
 
-	.VendorID               = 0x0547,					// PIUIO Vendor ID. Cypress 0x547
-	.ProductID              = 0x1002,					// PIUIO Product ID. FX-USB 0x1002
-	.ReleaseNumber          = VERSION_BCD(1,0,0),		// 0.0.1 :(
+    .VendorID               = 0x0547,                    // PIUIO Vendor ID. Cypress 0x547
+    .ProductID              = 0x1002,                    // PIUIO Product ID. FX-USB 0x1002
+    .ReleaseNumber          = VERSION_BCD(1,0,0),
 
-	.ManufacturerStrIndex   = STRING_ID_Manufacturer,
-	.ProductStrIndex        = STRING_ID_Product,
-	.SerialNumStrIndex      = NO_DESCRIPTOR,
+    .ManufacturerStrIndex   = STRING_ID_Manufacturer,
+    .ProductStrIndex        = STRING_ID_Product,
+    .SerialNumStrIndex      = NO_DESCRIPTOR,
 
-	.NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
+    .NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
 };
 
-/** Configuration descriptor structure. This descriptor, located in FLASH memory, describes the usage
- *  of the device in one of its supported configurations, including information about any device interfaces
- *  and endpoints. The descriptor is read out by the USB host during the enumeration process when selecting
- *  a configuration so that the host may correctly communicate with the USB device.
- */
- // RACERXL:
- /* --------------------------- Functional Range ---------------------------- */
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
+/** Device descriptor for the LXIOv1 */
+const USB_Descriptor_Device_t PROGMEM DeviceDescriptorLXIO1 =
 {
-	.Config =
-		{
-			.Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
+    // All "Device Description" is here
+    .Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
-			.TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
-			.TotalInterfaces        = 1,
+    .USBSpecification       = VERSION_BCD(1,1,0),
+    .Class                  = 0x00,
+    .SubClass               = 0x00,
+    .Protocol               = 0x00,
 
-			.ConfigurationNumber    = 1,
-			.ConfigurationStrIndex  = NO_DESCRIPTOR,
+    .Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
 
-			// RACERXL: PIUIO does have own power supply. But I dont like that lol, so mine is just USB powered.
-			.ConfigAttributes       = (USB_CONFIG_ATTR_RESERVED | USB_CONFIG_ATTR_SELFPOWERED),
+    .VendorID               = 0x0d2f,                    // LXIO v1 Vendor ID. 
+    .ProductID              = 0x1020,                    // LXIO v1 Product ID. 
+    //.ProductID              = 0x1040,                    // LXIO v2 Product ID.
+    .ReleaseNumber          = VERSION_BCD(1,0,0),
 
-			// RACERXL:  This is the value in mA, it will be divided by two (100 mean 50mA). Its just an info for PC
-			.MaxPowerConsumption    = USB_CONFIG_POWER_MA(100)
-		},
+    .ManufacturerStrIndex   = STRING_ID_Manufacturer,
+    .ProductStrIndex        = STRING_ID_Product,
+    .SerialNumStrIndex      = NO_DESCRIPTOR,
 
-	.HID_Interface =
-		{
-			.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
-
-			.InterfaceNumber        = INTERFACE_ID_PIUIO,
-			.AlternateSetting       = 0x00,
-
-			// RACERXL: We dont need any additional entry points, so this will be 0 CKDUR:1?
-			.TotalEndpoints         = 0,
-
-			// CKDUR: The interface didn't have nothing
-			.Class                  = 0x00,
-			.SubClass               = 0x00,
-			.Protocol               = 0x00,
-
-			.InterfaceStrIndex      = NO_DESCRIPTOR
-		},
-
-		// CKDUR: We don't need HID! God! D:
+    .NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
 };
 
-/** Language descriptor structure. This descriptor, located in FLASH memory, is returned when the host requests
- *  the string descriptor with index 0 (the first index). It is actually an array of 16-bit integers, which indicate
- *  via the language ID table available at USB.org what languages the device supports for its string descriptors.
- */
+/** Device descriptor for the LXIOv2 */
+const USB_Descriptor_Device_t PROGMEM DeviceDescriptorLXIO2 =
+{
+    // All "Device Description" is here
+    .Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
+
+    .USBSpecification       = VERSION_BCD(1,1,0),
+    .Class                  = 0x00,
+    .SubClass               = 0x00,
+    .Protocol               = 0x00,
+
+    .Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
+
+    .VendorID               = 0x0d2f,                    // LXIO v1 Vendor ID. 
+    .ProductID              = 0x1020,                    // LXIO v1 Product ID. 
+    //.ProductID              = 0x1040,                    // LXIO v2 Product ID.
+    .ReleaseNumber          = VERSION_BCD(1,0,0),
+
+    .ManufacturerStrIndex   = STRING_ID_Manufacturer,
+    .ProductStrIndex        = STRING_ID_Product,
+    .SerialNumStrIndex      = NO_DESCRIPTOR,
+
+    .NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
+};
+
+const USB_Descriptor_Device_t* DeviceDescriptors[] = {
+	&DeviceDescriptorPIUIO,
+	&DeviceDescriptorLXIO1,
+	&DeviceDescriptorLXIO2,
+};
+
+/** Configuration descriptor structure for PIUIO*/
+const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptorPIUIO =
+{
+    .Config =
+        {
+            .Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
+
+            .TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
+            .TotalInterfaces        = 1,
+
+            .ConfigurationNumber    = 1,
+            .ConfigurationStrIndex  = NO_DESCRIPTOR,
+
+            // PIUIO does have own power supply. But I dont like that lol, so mine is just USB powered.
+            .ConfigAttributes       = (USB_CONFIG_ATTR_RESERVED | USB_CONFIG_ATTR_SELFPOWERED),
+
+            // This is the value in mA, it will be divided by two (100 mean 50mA). Its just an info for PC
+            .MaxPowerConsumption    = USB_CONFIG_POWER_MA(100)
+        },
+
+    .USB_Interface =
+        {
+            .Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+
+            .InterfaceNumber        = INTERFACE_ID_PIUIO,
+            .AlternateSetting       = 0x00,
+
+            // We dont need any additional entry points, so this will be 0
+            .TotalEndpoints         = 0,
+
+            // The interface didn't have nothing
+            .Class                  = 0x00,
+            .SubClass               = 0x00,
+            .Protocol               = 0x00,
+
+            .InterfaceStrIndex      = NO_DESCRIPTOR
+        },
+
+        // We don't need HID! God! D:
+};
+
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM LXIOReport[] =
+{
+	HID_DESCRIPTOR_VENDOR(0, 1, 2, 3, 16)
+	/*HID_RI_USAGE_PAGE(16, (0xFF00 | VendorPageNum)),
+		HID_RI_USAGE(8, CollectionUsage),           
+		HID_RI_COLLECTION(8, 0x01),                 
+			HID_RI_USAGE(8, DataINUsage),           
+			HID_RI_LOGICAL_MINIMUM(8, 0x00),        
+			HID_RI_LOGICAL_MAXIMUM(8, 0xFF),        
+			HID_RI_REPORT_SIZE(8, 0x08),            
+			HID_RI_REPORT_COUNT(8, NumBytes),       
+			HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), 
+			HID_RI_USAGE(8, DataOUTUsage),          
+			HID_RI_LOGICAL_MINIMUM(8, 0x00),        
+			HID_RI_LOGICAL_MAXIMUM(8, 0xFF),        
+			HID_RI_REPORT_SIZE(8, 0x08),            
+			HID_RI_REPORT_COUNT(8, NumBytes),       
+			HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NON_VOLATILE), 
+		HID_RI_END_COLLECTION(0)*/
+	
+	/*0x06, 0x00, 0xFF,  // Usage Page (Vendor Defined 0xFF00)
+	0x09, 0x01,        // Usage (0x01)
+	0xA1, 0x01,        // Collection (Application)
+	0x09, 0x02,        //   Usage (0x02)
+	0x15, 0x00,        //   Logical Minimum (0)
+	0x25, 0xFF,        //   Logical Maximum (-1)
+	0x75, 0x08,        //   Report Size (8)
+	0x95, 0x10,        //   Report Count (16)
+	0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+	0x09, 0x03,        //   Usage (0x03)
+	0x15, 0x00,        //   Logical Minimum (0)
+	0x25, 0xFF,        //   Logical Maximum (-1)
+	0x75, 0x08,        //   Report Size (8)
+	0x95, 0x10,        //   Report Count (16)
+	0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+	0xC0,              // End Collection
+	*/
+};
+
+const USB_DescriptorLXIO_Configuration_t PROGMEM ConfigurationDescriptorLXIO =
+{
+    .Config =
+        {
+            .Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
+
+            .TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
+            .TotalInterfaces        = 1,
+
+            .ConfigurationNumber    = 1,
+            .ConfigurationStrIndex  = NO_DESCRIPTOR,
+
+            // PIUIO does have own power supply. But I dont like that lol, so mine is just USB powered.
+            .ConfigAttributes       = (USB_CONFIG_ATTR_RESERVED | USB_CONFIG_ATTR_SELFPOWERED),
+
+            // This is the value in mA, it will be divided by two (100 mean 50mA). Its just an info for PC
+            .MaxPowerConsumption    = 50
+        },
+
+    .USB_Interface =
+        {
+            .Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+
+            .InterfaceNumber        = INTERFACE_ID_PIUIO,
+            .AlternateSetting       = 0x00,
+
+            // We dont need any additional entry points, so this will be 0
+            .TotalEndpoints         = 0,
+
+            // The interface didn't have nothing
+            .Class                  = 0x03,
+            .SubClass               = 0x00,
+            .Protocol               = 0x00,
+
+            .InterfaceStrIndex      = NO_DESCRIPTOR
+        },
+
+    .HID_Desc =
+        {
+            .Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = HID_DTYPE_HID},
+
+			.HIDSpec                = VERSION_BCD(1,1,1),
+			.CountryCode            = 0x00,
+			.TotalReportDescriptors = 1,
+			.HIDReportType          = HID_DTYPE_Report,
+			.HIDReportLength        = sizeof(LXIOReport)
+        },
+
+    .EP0_Desc =
+        {
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = LXIO_EP0ADDR,
+			.Attributes             = (EP_TYPE_INTERRUPT),
+			.EndpointSize           = LXIO_EPSIZE,
+			.PollingIntervalMS      = 1
+        },
+
+	.EP1_Desc =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = LXIO_EP1ADDR,
+			.Attributes             = (EP_TYPE_INTERRUPT),
+			.EndpointSize           = LXIO_EPSIZE,
+			.PollingIntervalMS      = 1
+		}
+};
+
+const void* ConfigurationDescriptors[] = {
+	&ConfigurationDescriptorPIUIO,
+	&ConfigurationDescriptorLXIO,
+	&ConfigurationDescriptorLXIO,
+};
+
+/** Language descriptor structure.*/
 const USB_Descriptor_String_t PROGMEM LanguageString = USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 
-/** Manufacturer descriptor string. This is a Unicode string containing the manufacturer's details in human readable
- *  form, and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
- *  Descriptor.
- */
-const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR(L"CKDUR");	// CKDUR: By me
+/** Manufacturer descriptor string.*/
+const USB_Descriptor_String_t PROGMEM ManufacturerStringPIUIO = USB_STRING_DESCRIPTOR(L"NTDEC");
+const USB_Descriptor_String_t PROGMEM ManufacturerStringLXIO = USB_STRING_DESCRIPTOR(L"ANDAMIRO");
 
-/** Product descriptor string. This is a Unicode string containing the product's details in human readable form,
- *  and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
- *  Descriptor.
- */
-const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"PIUIO");	// CKDUR: Remember maybe we can name it FX-USB
+const USB_Descriptor_String_t* ManufacturerStrings[] = {
+	&ManufacturerStringPIUIO,
+	&ManufacturerStringLXIO,
+	&ManufacturerStringLXIO,
+};
 
-/** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"
- *  documentation) by the application code so that the address and size of a requested descriptor can be given
- *  to the USB library. When the device receives a Get Descriptor request on the control endpoint, this function
- *  is called so that the descriptor details can be passed back and the appropriate descriptor sent back to the
- *  USB host.
- */
+/** Product descriptor string.*/
+const USB_Descriptor_String_t PROGMEM ProductStringPIUIO = USB_STRING_DESCRIPTOR(L"PIUIO");
+const USB_Descriptor_String_t PROGMEM ProductStringLXIO = USB_STRING_DESCRIPTOR(L"PIU HID V1.00");
+
+const USB_Descriptor_String_t* ProductStrings[] = {
+	&ProductStringPIUIO,
+	&ProductStringLXIO,
+	&ProductStringLXIO,
+};
+
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void** const DescriptorAddress)
 {
-	const uint8_t  DescriptorType   = (wValue >> 8);
-	const uint8_t  DescriptorNumber = (wValue & 0xFF);
+    const uint8_t  DescriptorType   = (wValue >> 8);
+    const uint8_t  DescriptorNumber = (wValue & 0xFF);
 
-	const void* Address = NULL;
-	uint16_t    Size    = NO_DESCRIPTOR;
+    const void* Address = NULL;
+    uint16_t    Size    = NO_DESCRIPTOR;
 
-	switch (DescriptorType)
-	{
-		case DTYPE_Device:
-			Address = &DeviceDescriptor;
-			Size    = sizeof(USB_Descriptor_Device_t);
+    switch (DescriptorType)
+    {
+        case DTYPE_Device:
+            Address = DeviceDescriptors[piuio_which_device];
+            Size    = sizeof(USB_Descriptor_Device_t);
+            break;
+        case DTYPE_Configuration:
+            Address = ConfigurationDescriptors[piuio_which_device];
+            Size    = sizeof(USB_Descriptor_Configuration_t);
+            break;
+        case DTYPE_String:
+            switch (DescriptorNumber)
+            {
+                case STRING_ID_Language:
+                    Address = &LanguageString;
+                    Size    = pgm_read_byte(&LanguageString.Header.Size);
+                    break;
+                case STRING_ID_Manufacturer:
+                    Address = ManufacturerStrings[piuio_which_device];
+                    Size    = pgm_read_byte(&ManufacturerStrings[piuio_which_device]->Header.Size);
+                    break;
+                case STRING_ID_Product:
+                    Address = ProductStrings[piuio_which_device];
+                    Size    = pgm_read_byte(&ProductStrings[piuio_which_device]->Header.Size);
+                    break;
+            }
+
+            break;
+		// LXIO only dumps these descriptor
+		// If by accident come from a PIUIO, well, fat chance
+		case HID_DTYPE_HID:
+			Address = &ConfigurationDescriptorLXIO.HID_Desc;
+			Size    = sizeof(USB_HID_Descriptor_HID_t);
 			break;
-		case DTYPE_Configuration:
-			Address = &ConfigurationDescriptor;
-			Size    = sizeof(USB_Descriptor_Configuration_t);
+		case HID_DTYPE_Report:
+			Address = &LXIOReport;
+			Size    = sizeof(LXIOReport);
 			break;
-		case DTYPE_String:
-			switch (DescriptorNumber)
-			{
-				case STRING_ID_Language:
-					Address = &LanguageString;
-					Size    = pgm_read_byte(&LanguageString.Header.Size);
-					break;
-				case STRING_ID_Manufacturer:
-					Address = &ManufacturerString;
-					Size    = pgm_read_byte(&ManufacturerString.Header.Size);
-					break;
-				case STRING_ID_Product:
-					Address = &ProductString;
-					Size    = pgm_read_byte(&ProductString.Header.Size);
-					break;
-			}
+    }
 
-			break;
-	}
-
-	*DescriptorAddress = Address;
-	return Size;
+    *DescriptorAddress = Address;
+    return Size;
 }
 
