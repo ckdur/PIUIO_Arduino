@@ -68,7 +68,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptorLXIO1 =
     .VendorID               = 0x0d2f,                    // LXIO v1 Vendor ID. 
     .ProductID              = 0x1020,                    // LXIO v1 Product ID. 
     //.ProductID              = 0x1040,                    // LXIO v2 Product ID.
-    .ReleaseNumber          = VERSION_BCD(1,0,0),
+    .ReleaseNumber          = VERSION_BCD(0,0,1),
 
     .ManufacturerStrIndex   = STRING_ID_Manufacturer,
     .ProductStrIndex        = STRING_ID_Product,
@@ -145,31 +145,14 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptorPIUIO =
 
             .InterfaceStrIndex      = NO_DESCRIPTOR
         },
-
-        // We don't need HID! God! D:
 };
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM LXIOReport[] =
 {
+#if 1
 	HID_DESCRIPTOR_VENDOR(0, 1, 2, 3, 16)
-	/*HID_RI_USAGE_PAGE(16, (0xFF00 | VendorPageNum)),
-		HID_RI_USAGE(8, CollectionUsage),           
-		HID_RI_COLLECTION(8, 0x01),                 
-			HID_RI_USAGE(8, DataINUsage),           
-			HID_RI_LOGICAL_MINIMUM(8, 0x00),        
-			HID_RI_LOGICAL_MAXIMUM(8, 0xFF),        
-			HID_RI_REPORT_SIZE(8, 0x08),            
-			HID_RI_REPORT_COUNT(8, NumBytes),       
-			HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), 
-			HID_RI_USAGE(8, DataOUTUsage),          
-			HID_RI_LOGICAL_MINIMUM(8, 0x00),        
-			HID_RI_LOGICAL_MAXIMUM(8, 0xFF),        
-			HID_RI_REPORT_SIZE(8, 0x08),            
-			HID_RI_REPORT_COUNT(8, NumBytes),       
-			HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NON_VOLATILE), 
-		HID_RI_END_COLLECTION(0)*/
-	
-	/*0x06, 0x00, 0xFF,  // Usage Page (Vendor Defined 0xFF00)
+#else
+	0x06, 0x00, 0xFF,  // Usage Page (Vendor Defined 0xFF00)
 	0x09, 0x01,        // Usage (0x01)
 	0xA1, 0x01,        // Collection (Application)
 	0x09, 0x02,        //   Usage (0x02)
@@ -185,7 +168,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM LXIOReport[] =
 	0x95, 0x10,        //   Report Count (16)
 	0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
 	0xC0,              // End Collection
-	*/
+#endif
 };
 
 const USB_DescriptorLXIO_Configuration_t PROGMEM ConfigurationDescriptorLXIO =
@@ -194,7 +177,7 @@ const USB_DescriptorLXIO_Configuration_t PROGMEM ConfigurationDescriptorLXIO =
         {
             .Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
 
-            .TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
+            .TotalConfigurationSize = sizeof(USB_DescriptorLXIO_Configuration_t),
             .TotalInterfaces        = 1,
 
             .ConfigurationNumber    = 1,
@@ -214,8 +197,8 @@ const USB_DescriptorLXIO_Configuration_t PROGMEM ConfigurationDescriptorLXIO =
             .InterfaceNumber        = INTERFACE_ID_PIUIO,
             .AlternateSetting       = 0x00,
 
-            // We dont need any additional entry points, so this will be 0
-            .TotalEndpoints         = 0,
+            // Two interrupt endpoints please
+            .TotalEndpoints         = 2,
 
             // The interface didn't have nothing
             .Class                  = 0x03,
@@ -263,6 +246,12 @@ const void* ConfigurationDescriptors[] = {
 	&ConfigurationDescriptorLXIO,
 };
 
+const int ConfigurationDescriptorSizes[] = {
+	sizeof(USB_Descriptor_Configuration_t),
+	sizeof(USB_DescriptorLXIO_Configuration_t),
+	sizeof(USB_DescriptorLXIO_Configuration_t),
+};
+
 /** Language descriptor structure.*/
 const USB_Descriptor_String_t PROGMEM LanguageString = USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 
@@ -304,7 +293,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
             break;
         case DTYPE_Configuration:
             Address = ConfigurationDescriptors[piuio_which_device];
-            Size    = sizeof(USB_Descriptor_Configuration_t);
+            Size    = ConfigurationDescriptorSizes[piuio_which_device];
             break;
         case DTYPE_String:
             switch (DescriptorNumber)

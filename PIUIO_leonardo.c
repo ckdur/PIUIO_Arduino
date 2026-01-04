@@ -331,6 +331,7 @@ int main(void)
     for (;;)
     {
 RESTART:
+        USB_Loop();
         USB_USBTask();
         
         if(nControl > 1000) LEDon(RXLED);

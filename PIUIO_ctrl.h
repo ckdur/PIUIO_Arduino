@@ -3,6 +3,7 @@
 
 extern int nControl;
 void SetupHardware(void);
+void USB_Loop(void);
 
 extern unsigned char LampData[8];
 extern unsigned char InputData[8];

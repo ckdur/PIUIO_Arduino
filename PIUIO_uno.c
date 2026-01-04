@@ -68,6 +68,7 @@ int main(void)
     for (;;)
     {
 RESTART:
+        USB_Loop();
         USB_USBTask();
         
         if(nControl > 1000) LEDon(RXLED);
@@ -141,7 +142,7 @@ RESTART:
         if(!tmp1) {CLRBIT(InputData[1],2);} else {SETBIT(InputData[1],2);};
         tmp1 = GETBIT(Input[1],7); SETBIT(Input[1],7);
         if(!tmp1) {CLRBIT(InputData[3],2);} else {SETBIT(InputData[3],2);};
-        InputData[0] = Input[0];                                               //    Andamiro uses unsigned short here also
+        InputData[0] = Input[0]; //    Andamiro uses unsigned short here also
         InputData[2] = Input[1];
     }
 

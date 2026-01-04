@@ -2,6 +2,10 @@
 #include "PIUIO_ctrl.h"
 #include "Descriptors.h"
 
+// Useful commands to test the descriptors
+// sudo lsusb -d 0d2f:1020 -vv
+// sudo usbhid-dump -d 0d2f:1020 -e descriptor
+
 unsigned char LampData[8];
 unsigned char InputData[8];
 
@@ -46,11 +50,30 @@ void EVENT_USB_Device_Disconnect(void)
 {
 }
 
+const USB_Endpoint_Table_t ReportINEndpoint = {
+    .Address = LXIO_EP0ADDR,
+    .Size    = LXIO_EPSIZE,
+    .Type    = EP_TYPE_INTERRUPT,
+    .Banks   = 1,
+};
+
+const USB_Endpoint_Table_t ReportOUTEndpoint = {
+    .Address = LXIO_EP1ADDR,
+    .Size    = LXIO_EPSIZE,
+    .Type    = EP_TYPE_INTERRUPT,
+    .Banks   = 1,
+};
+
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
     //bool ConfigSuccess = true;
-    // Do not enable SOFs
+
+    if(piuio_which_device != 0) {
+        Endpoint_ConfigureEndpointTable(&ReportINEndpoint, 1);
+        Endpoint_ConfigureEndpointTable(&ReportOUTEndpoint, 1);
+    }
+
     USB_Device_EnableSOFEvents();
 }
 
@@ -204,4 +227,51 @@ void EVENT_USB_Device_ControlRequest(void)
 /** Event handler for the USB device Start Of Frame event. */
 void EVENT_USB_Device_StartOfFrame(void)
 {
+}
+
+void USB_Loop(void) {
+    // Do not handle endpoints if not an LXIO
+    if(piuio_which_device == 0) return;
+
+    // Do the conversion from the Lights and Input from regular IO
+    // to the LX Lights and Input format
+    // NOTE: Note that InputData will carry the 4 sensor anyways
+    LXInputData[0] = InputData[0];
+    LXInputData[1] = InputData[0];
+    LXInputData[2] = InputData[0];
+    LXInputData[3] = InputData[0];
+    LXInputData[4] = InputData[2];
+    LXInputData[5] = InputData[2];
+    LXInputData[6] = InputData[2];
+    LXInputData[7] = InputData[2];
+    LXInputData[8] = InputData[1];
+    LXInputData[9] = InputData[3];
+    LXInputData[10] = 0xFF; // TODO: We do not have a handler for the front buttons
+    LXInputData[11] = 0xFF; // TODO: We do not have a handler for the front buttons
+    LXInputData[14] = 0xFF;
+    LXInputData[15] = 0xFF;
+
+    // Handle in endpoint
+    Endpoint_SelectEndpoint(LXIO_EP0ADDR); // An input
+
+    if (Endpoint_IsINReady())
+	{
+        nControl++;
+        Endpoint_Write_Stream_LE(LXInputData, sizeof(LXInputData), NULL);
+        Endpoint_ClearIN();
+    }
+
+    // Handle out endpoint
+    Endpoint_SelectEndpoint(LXIO_EP1ADDR); // An output
+	if (Endpoint_IsOUTReceived())
+	{
+        if (Endpoint_IsReadWriteAllowed())
+		{
+            nControl++;
+            Endpoint_Read_Stream_LE(&LXLampData, sizeof(LXLampData), NULL);
+        }
+		Endpoint_ClearOUT();
+	}
+
+    memcpy(LampData, LXLampData, 8); // Just copy in the case of lamps
 }
