@@ -41,6 +41,9 @@ byte cabLEDs = 255;
 byte padLEDsP1 = 0;
 byte padLEDsP2 = 0;
 
+static int prev_switch;
+static int prev_switch_state;
+
 void setup() {
     pinMode(pinClear, INPUT_PULLUP); //Clear
     pinMode(pinService, INPUT_PULLUP); //Service
@@ -62,7 +65,7 @@ void setup() {
     pinMode(pinLEDDat, OUTPUT); //Lighting shift register pins
     pinMode(pinLEDLat, OUTPUT);
     pinMode(pinLEDClk, OUTPUT);
-    pinMode(13, OUTPUT);//Debug led
+    pinMode(13, INPUT_PULLUP); // For the switch
 
     Serial.begin(38400);
   Input[0]=0xFF;
@@ -70,6 +73,12 @@ void setup() {
 
   cabLEDs = 255; padLEDsP1 = 0; padLEDsP2 = 0; //Write initial data to the shift registers for lighting
   writeLighting();
+
+  prev_switch = digitalRead(13)?1:0;
+  for(int i = 1; i < 4; i++) {
+      prev_switch |= (prev_switch & 1) << i;
+  }
+  prev_switch_state = prev_switch == 0xF?1:0;
 }
 
 unsigned char inputn,tmp1; 
@@ -155,6 +164,19 @@ POINT_RETURN:
 
   
   writeLighting();
+
+  // This has a debouncer
+  prev_switch = prev_switch << 1;
+  prev_switch |= digitalRead(13)?1:0;
+  prev_switch &= 0xF;
+  int cur_switch_state = prev_switch_state;
+  if(prev_switch == 0xF) prev_switch_state = 1;
+  else if(prev_switch == 0x0) prev_switch_state = 0;
+  if(prev_switch_state != cur_switch_state && !cur_switch_state) {
+    Serial.write(0xDF);
+    Serial.flush();
+  }
+  prev_switch_state = cur_switch_state;
 }
 
 //Writes lighting data to the 3 shift registers - Code can be modified to only use 2

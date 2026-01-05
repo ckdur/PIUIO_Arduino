@@ -219,6 +219,8 @@ int READfrom(char ledNumber, int port){
 #define LED_UR DIOA3
 #define LED_DL DIOA4
 
+#define KEY_SWITCH DIO0
+
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
@@ -281,6 +283,9 @@ int main(void)
 #ifdef KEY_COIN2
     MODEoff(KEY_COIN2); LEDon(KEY_COIN2);
 #endif
+#ifdef KEY_SWITCH
+    MODEoff(KEY_SWITCH); LEDon(KEY_SWITCH);
+#endif
 
 #ifdef LED_Q
     MODEon(LED_Q);
@@ -328,6 +333,14 @@ int main(void)
     MODEon(LED_DR);
 #endif
 
+#ifdef KEY_SWITCH
+    int prev_switch;
+    prev_switch = READfrom(KEY_SWITCH)?1:0;
+    for(int i = 1; i < 4; i++) {
+        prev_switch |= (prev_switch & 1) << i;
+    }
+    int prev_switch_state = prev_switch == 0xF?1:0;
+#endif
     for (;;)
     {
 RESTART:
@@ -336,6 +349,19 @@ RESTART:
         
         if(nControl > 1000) LEDon(RXLED);
         if(nControl > 2000) {LEDoff(RXLED); nControl = 0;}
+
+#ifdef KEY_SWITCH
+        prev_switch = prev_switch << 1;
+        prev_switch |= READfrom(KEY_SWITCH)?1:0;
+        prev_switch &= 0xF;
+        int cur_switch_state = prev_switch_state;
+        if(prev_switch == 0xF) prev_switch_state = 1;
+        else if(prev_switch == 0x0) prev_switch_state = 0;
+        if(prev_switch_state != cur_switch_state && !cur_switch_state) {
+            go_next_device();
+        }
+        prev_switch_state = cur_switch_state;
+#endif
         
 #ifdef KEY_Q
         if(READfrom(KEY_Q)) {SETBIT(InputData[0],0);} else {CLRBIT(InputData[0],0);}

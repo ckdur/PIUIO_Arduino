@@ -9,6 +9,9 @@
 static unsigned char Input[2];
 static unsigned char Output[3];
 
+static int prev_switch;
+static int prev_switch_state;
+
 void setup() {
   pinMode(A1, INPUT_PULLUP);
   pinMode(A2, INPUT_PULLUP);
@@ -31,6 +34,12 @@ void setup() {
   Serial.begin(38400);
   Input[0]=0xFF;
   Input[1]=0xFF;
+
+  prev_switch = digitalRead(A0)?1:0;
+  for(int i = 1; i < 4; i++) {
+      prev_switch |= (prev_switch & 1) << i;
+  }
+  prev_switch_state = prev_switch == 0xF?1:0;
 }
 
 #define SET_THING(a, ind) if(a) SETBIT(Input[ind/8],ind%8); else CLRBIT(Input[ind/8],ind%8);
@@ -77,4 +86,17 @@ POINT_RETURN:
   SET_THING(digitalRead(13), 13);     // TEST
   // SET_THING(digitalRead(A4), 7);   // COIN 1
   // SET_THING(digitalRead(A5), 15);  // COIN 2
+
+  // This has a debouncer
+  prev_switch = prev_switch << 1;
+  prev_switch |= digitalRead(A0)?1:0;
+  prev_switch &= 0xF;
+  int cur_switch_state = prev_switch_state;
+  if(prev_switch == 0xF) prev_switch_state = 1;
+  else if(prev_switch == 0x0) prev_switch_state = 0;
+  if(prev_switch_state != cur_switch_state && !cur_switch_state) {
+    Serial.write(0xDF);
+    Serial.flush();
+  }
+  prev_switch_state = cur_switch_state;
 }

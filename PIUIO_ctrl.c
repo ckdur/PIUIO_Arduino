@@ -12,6 +12,11 @@ unsigned char InputData[8];
 unsigned char LXLampData[16];
 unsigned char LXInputData[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff};
 
+int next_device = 0;
+
+unsigned char EEPROM_read(unsigned int uiAddress);
+//unsigned char EEPROM_write(unsigned int uiAddress, unsigned char ucData);
+
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
 void SetupHardware(void)
 {
@@ -35,6 +40,11 @@ void SetupHardware(void)
 
     PMIC.CTRL = PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 #endif
+
+    // Get the status of the EEPROM
+    unsigned char dat = EEPROM_read(0);
+    piuio_which_device = (int)dat;
+    next_device = piuio_which_device;
 
     /* Hardware Initialization */
     USB_Init();
@@ -274,4 +284,36 @@ void USB_Loop(void) {
 	}
 
     memcpy(LampData, LXLampData, 8); // Just copy in the case of lamps
+}
+
+// Extracted from the datasheet
+unsigned char EEPROM_read(unsigned int uiAddress)
+{
+    /* Wait for completion of previous write */
+    while(EECR & (1<<EEPE));
+    /* Set up address register */
+    EEAR = uiAddress;
+    /* Start eeprom read by writing EERE */
+    EECR |= (1<<EERE);
+    /* Return data from Data Register */
+    return EEDR;
+}
+
+void EEPROM_write(unsigned int uiAddress, unsigned char ucData)
+{
+    /* Wait for completion of previous write */
+    while(EECR & (1<<EEPE));
+    /* Set up address and Data Registers */
+    EEAR = uiAddress;
+    EEDR = ucData;
+    /* Write logical one to EEMPE */
+    EECR |= (1<<EEMPE);
+    /* Start eeprom write by setting EEPE */
+    EECR |= (1<<EEPE);
+}
+
+void go_next_device() {
+    next_device++;
+    if(next_device >= 3) next_device = 0;
+    EEPROM_write(0, (unsigned char)next_device);
 }

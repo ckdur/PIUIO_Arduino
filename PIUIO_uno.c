@@ -94,7 +94,6 @@ RESTART:
             tmp = Serial_ReceiveByte();
             if(tmp == 0xAE)
             {
-                // CKDUR: Write Lamp Buffer
                 for(i = 0; i < 3; i++)
                 {
                     Serial_SendByte(Output[i]);
@@ -110,6 +109,9 @@ RESTART:
                     }
                     m[i] = Serial_ReceiveByte();
                 }
+            }
+            else if(tmp == 0xDF) {
+                go_next_device();
             }
         }
         
