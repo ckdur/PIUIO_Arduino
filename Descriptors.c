@@ -26,7 +26,7 @@
 #include "Descriptors.h"
 
 
-int piuio_which_device = 1; // Default is PIUIO
+int piuio_which_device = 0; // Default is PIUIO
 /** Device descriptor for the regular PIUIO
  */
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptorPIUIO =
