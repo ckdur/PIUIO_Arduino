@@ -355,8 +355,8 @@ RESTART:
         prev_switch |= READfrom(KEY_SWITCH)?1:0;
         prev_switch &= 0xF;
         int cur_switch_state = prev_switch_state;
-        if(prev_switch == 0xF) prev_switch_state = 1;
-        else if(prev_switch == 0x0) prev_switch_state = 0;
+        if(prev_switch == 0xF) cur_switch_state = 1;
+        else if(prev_switch == 0x0) cur_switch_state = 0;
         if(prev_switch_state != cur_switch_state && !cur_switch_state) {
             go_next_device();
         }

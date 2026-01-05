@@ -13,6 +13,7 @@ static int prev_switch;
 static int prev_switch_state;
 
 void setup() {
+  pinMode(A0, INPUT_PULLUP);
   pinMode(A1, INPUT_PULLUP);
   pinMode(A2, INPUT_PULLUP);
   pinMode(A3, INPUT_PULLUP);
@@ -92,8 +93,8 @@ POINT_RETURN:
   prev_switch |= digitalRead(A0)?1:0;
   prev_switch &= 0xF;
   int cur_switch_state = prev_switch_state;
-  if(prev_switch == 0xF) prev_switch_state = 1;
-  else if(prev_switch == 0x0) prev_switch_state = 0;
+  if(prev_switch == 0xF) cur_switch_state = 1;
+  else if(prev_switch == 0x0) cur_switch_state = 0;
   if(prev_switch_state != cur_switch_state && !cur_switch_state) {
     Serial.write(0xDF);
     Serial.flush();
