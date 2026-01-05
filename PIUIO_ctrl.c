@@ -44,6 +44,7 @@ void SetupHardware(void)
     // Get the status of the EEPROM
     unsigned char dat = EEPROM_read(0);
     piuio_which_device = (int)dat;
+    if(piuio_which_device < 0 || piuio_which_device > 2) piuio_which_device = 0;
     next_device = piuio_which_device;
 
     /* Hardware Initialization */
