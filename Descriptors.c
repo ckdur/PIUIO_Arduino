@@ -67,7 +67,6 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptorLXIO1 =
 
     .VendorID               = 0x0d2f,                    // LXIO v1 Vendor ID. 
     .ProductID              = 0x1020,                    // LXIO v1 Product ID. 
-    //.ProductID              = 0x1040,                    // LXIO v2 Product ID.
     .ReleaseNumber          = VERSION_BCD(0,0,1),
 
     .ManufacturerStrIndex   = STRING_ID_Manufacturer,
@@ -91,9 +90,8 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptorLXIO2 =
     .Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
 
     .VendorID               = 0x0d2f,                    // LXIO v1 Vendor ID. 
-    .ProductID              = 0x1020,                    // LXIO v1 Product ID. 
-    //.ProductID              = 0x1040,                    // LXIO v2 Product ID.
-    .ReleaseNumber          = VERSION_BCD(1,0,0),
+    .ProductID              = 0x1040,                    // LXIO v2 Product ID. 
+    .ReleaseNumber          = VERSION_BCD(0,0,1),
 
     .ManufacturerStrIndex   = STRING_ID_Manufacturer,
     .ProductStrIndex        = STRING_ID_Product,
